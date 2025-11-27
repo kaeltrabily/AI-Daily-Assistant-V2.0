@@ -1,34 +1,61 @@
 # AI Daily Assistant
 
-A smart, minimalistic daily assistant that helps you plan and manage your day. This application provides a pre-configured daily schedule and leverages the Google Gemini API to allow for interactive modifications and Q&A through a chat interface.
+A smart daily assistant that helps you plan your day. This application generates a detailed, personalized schedule and allows you to refine it through an interactive chat powered by the Google Gemini API.
 
-## ✨ Features
+## Features
 
-- **Pre-loaded Schedule**: Instantly loads a default schedule for typical workdays (Saturday–Thursday) and days off (Friday).
-- **AI-Powered Chat**: A floating chat window allows you to ask questions about your schedule ("When is lunch?") or request changes ("Move my gym session to 7 PM").
-- **Dark Mode**: A sleek, toggleable dark mode for comfortable viewing in any lighting condition.
-- **Color-Coded Events**: Events are automatically color-coded by category (Work, Gym, Family, etc.) for quick visual organization.
-- **Weather Forecast**: Displays the current day's and tomorrow's weather forecast for a fixed location (New Damietta, Egypt).
-- **Fully Responsive**: A clean and modern UI that works great on both desktop and mobile devices.
+- **AI-Generated Schedule**: Instantly generates a structured schedule for today and tomorrow based on your life constraints.
+- **AI-Powered Chat**: Modify your schedule or ask questions about it using a natural language chat interface powered by Gemini Pro.
+- **Dark Mode**: A sleek, user-friendly dark mode toggle for comfortable viewing in any lighting.
+- **Custom Event Colors**: Events are color-coded by type (work, gym, family, etc.) for quick visual organization.
+- **Real-time Weather**: Fetches and displays the current weather based on your location (with a fallback).
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **Frontend**: [React](https://reactjs.org/) with [TypeScript](https://www.typescriptlang.org/)
-- **AI**: [Google Gemini API](https://ai.google.dev/) (`@google/genai`)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **React**: A JavaScript library for building user interfaces.
+- **Vite**: A modern, fast frontend build tool.
+- **TypeScript**: A statically typed superset of JavaScript.
+- **Tailwind CSS**: A utility-first CSS framework for rapid UI development.
+- **@google/genai**: The official Google Gemini API client library.
 
-## 🚀 Getting Started
-
-This is a pure client-side application and does not require a build step or a local server.
+## Project Setup
 
 ### Prerequisites
 
-- A modern web browser (e.g., Chrome, Firefox, Safari).
-- A Google Gemini API key. The application is configured to read this key from an environment variable (`API_KEY`). You must have this variable available in the environment where you run the app.
+- [Node.js](https://nodejs.org/) (version 18 or newer recommended).
+- A Google Gemini API key. You can get one from [Google AI Studio](https://ai.google.dev/).
 
-### Running the Application
+### Installation & Running
 
-1.  Make sure your Gemini `API_KEY` is set in your environment.
-2.  Simply open the `index.html` file in your web browser.
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd <repository-directory>
+    ```
 
-That's it! The application will load your default schedule and you can start interacting with the AI assistant.
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Set up your Gemini API Key:**
+    - Create a new file named `.env.local` in the root of the project.
+    - Add your Gemini API key to this file:
+      ```
+      VITE_API_KEY=YOUR_API_KEY_HERE
+      ```
+    - Replace `YOUR_API_KEY_HERE` with your actual key.
+
+4.  **Start the development server:**
+    ```bash
+    npm run dev
+    ```
+    This will start the application, and you can view it in your browser at the local address provided (usually `http://localhost:5173`).
+
+### Building for Production
+
+To create a production-ready build for services like Vercel, run:
+```bash
+npm run build
+```
+The optimized files will be generated in the `dist` directory.

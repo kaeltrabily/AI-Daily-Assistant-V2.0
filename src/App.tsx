@@ -11,6 +11,8 @@ import { ScheduleView } from './components/ScheduleView';
 
 type Day = 'today' | 'tomorrow';
 
+// Fix: Per coding guidelines, API key must be retrieved from process.env.API_KEY.
+// This resolves the error "Property 'env' does not exist on type 'ImportMeta'".
 // This is a client-side only app. The API key is expected to be in the environment.
 if (!process.env.API_KEY) {
   throw new Error("API_KEY is not defined in your environment variables.");
