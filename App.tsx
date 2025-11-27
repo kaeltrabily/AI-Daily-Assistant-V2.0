@@ -4,8 +4,7 @@ import { createSchedulePrompt, scheduleSchema, chatResponseSchema } from './cons
 import type { ChatMessage, ScheduleEvent, WeatherInfo } from './types';
 import { ChatInterface } from './components/ChatInterface';
 import { LoadingSpinner } from './components/LoadingSpinner';
-// Import CloseIcon
-import { SparklesIcon, ChatBubbleIcon, SunIcon, MoonIcon, CloudIcon, CloseIcon } from './components/IconComponents';
+import { SparklesIcon, ChatBubbleIcon, SunIcon, MoonIcon, CloudIcon } from './components/IconComponents';
 import { Tabs } from './components/Tabs';
 import { ScheduleView } from './components/ScheduleView';
 
@@ -29,9 +28,6 @@ const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [weatherData, setWeatherData] = useState<{today: WeatherInfo, tomorrow: WeatherInfo} | null>(null);
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
-  const [geolocationUIMessage, setGeolocationUIMessage] = useState<string | null>(null);
-  const [showGeolocationMessage, setShowGeolocationMessage] = useState<boolean>(true);
-
 
   useEffect(() => {
     if (isDarkMode) {
@@ -56,19 +52,16 @@ const App: React.FC = () => {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
-          setGeolocationUIMessage(null); // Clear message if successful
         },
         (err) => {
           console.warn(`Geolocation access failed (${err.code}): ${err.message}. Using default location.`);
           setLocation(defaultLocation);
-          setGeolocationUIMessage(`Geolocation access failed (${err.code}): ${err.message}. Using default location (New Damietta, Egypt). You can enable location in your browser settings or run the app from a local web server for better accuracy.`);
         },
         { timeout: 5000 } // Reduced timeout for faster fallback
       );
     } else {
       console.warn("Geolocation not supported. Using default location.");
       setLocation(defaultLocation);
-      setGeolocationUIMessage(`Geolocation not supported in this browser. Using default location (New Damietta, Egypt).`);
     }
   }, []);
 
@@ -268,18 +261,6 @@ const App: React.FC = () => {
             ) : (
               <>
                   <div className="h-full overflow-y-auto p-4 md:p-6 lg:p-8 max-w-3xl mx-auto pb-24">
-                      {geolocationUIMessage && showGeolocationMessage && (
-                          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300 rounded-lg flex items-start justify-between text-sm">
-                              <p>{geolocationUIMessage}</p>
-                              <button 
-                                  onClick={() => setShowGeolocationMessage(false)}
-                                  className="ml-4 p-1 rounded-full text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-200 hover:bg-yellow-100 dark:hover:bg-yellow-800 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                              >
-                                  <CloseIcon className="w-4 h-4" />
-                              </button>
-                          </div>
-                      )}
-
                       <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
                       <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-baseline justify-between mb-4 px-1">
