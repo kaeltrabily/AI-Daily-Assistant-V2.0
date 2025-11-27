@@ -1,0 +1,7 @@
+{
+  "name": "AI Daily Assistant",
+  "description": "A smart daily assistant that helps you plan your day. It generates a detailed, personalized schedule and allows you to refine it through an interactive chat powered by the Gemini API.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
