@@ -47,25 +47,3 @@ export const chatResponseSchema = {
   },
   required: ['responseMessage', 'updatedSchedule'],
 };
-
-export const createSchedulePrompt = (day: 'today' | 'tomorrow'): string => `
-You are my daily-life assistant. Your task is to produce a practical, ready-to-use daily schedule for me based on the provided constraints.
-The output MUST be a valid JSON array of schedule events, conforming to the provided schema. Do not include any other text or markdown.
-
-Generate the schedule for: ${day}.
-If it is a workday (Saturday-Thursday), use the workday constraints. If it's a Friday, create a more relaxed day-off schedule.
-
-User facts & constraints (do not change):
-- Baby: 6-week-old daughter.
-- Partner (wife) is present and available to share care.
-- Work: 9:00 -> 17:00, Saturday–Thursday.
-- Commute: 30 minutes each way.
-- Exercise: prefers a run before work and gym after work.
-- Reading/Study: an hour to study chess, or concrete, steel, etc.
-- Family: dinner with family every workday evening.
-- Sleep: requires at least 8 hours nightly.
-
-For each event in the schedule, provide an icon, time, title, and description.
-Propose reasonable defaults where needed. For example, assume the gym is near the office for efficiency.
-Ensure the schedule is logical and accounts for all constraints, including commute times and baby care handoffs.
-`;

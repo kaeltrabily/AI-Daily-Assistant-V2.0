@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { GoogleGenAI } from '@google/genai';
-import { createSchedulePrompt, scheduleSchema, chatResponseSchema } from './constants';
+import { scheduleSchema, chatResponseSchema } from './constants';
 import type { ChatMessage, ScheduleEvent, WeatherInfo } from './types';
 import { ChatInterface } from './components/ChatInterface';
 import { LoadingSpinner } from './components/LoadingSpinner';
-// Import CloseIcon
 import { SparklesIcon, ChatBubbleIcon, SunIcon, MoonIcon, CloudIcon, CloseIcon } from './components/IconComponents';
 import { Tabs } from './components/Tabs';
 import { ScheduleView } from './components/ScheduleView';
+import { defaultWorkdaySchedule, defaultFridaySchedule } from './defaultScheduleData';
 
 type Day = 'today' | 'tomorrow';
 
@@ -28,9 +28,9 @@ const App: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [weatherData, setWeatherData] = useState<{today: WeatherInfo, tomorrow: WeatherInfo} | null>(null);
-  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
-  const [geolocationUIMessage, setGeolocationUIMessage] = useState<string | null>(null);
-  const [showGeolocationMessage, setShowGeolocationMessage] = useState<boolean>(true);
+  
+  // Fixed default location: New Damietta, Egypt
+  const fixedLocation = { lat: 31.4167, lng: 31.8167, name: 'New Damietta' };
 
 
   useEffect(() => {
@@ -44,35 +44,8 @@ const App: React.FC = () => {
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
-
-  useEffect(() => {
-    // New Damietta, Egypt coordinates
-    const defaultLocation = { lat: 31.4167, lng: 31.8167 }; 
-
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-          setGeolocationUIMessage(null); // Clear message if successful
-        },
-        (err) => {
-          console.warn(`Geolocation access failed (${err.code}): ${err.message}. Using default location.`);
-          setLocation(defaultLocation);
-          setGeolocationUIMessage(`Geolocation access failed (${err.code}): ${err.message}. Using default location (New Damietta, Egypt). You can enable location in your browser settings or run the app from a local web server for better accuracy.`);
-        },
-        { timeout: 5000 } // Reduced timeout for faster fallback
-      );
-    } else {
-      console.warn("Geolocation not supported. Using default location.");
-      setLocation(defaultLocation);
-      setGeolocationUIMessage(`Geolocation not supported in this browser. Using default location (New Damietta, Egypt).`);
-    }
-  }, []);
-
-  const fetchWeather = useCallback(async (lat: number, lng: number) => {
+  
+  const fetchWeather = useCallback(async (lat: number, lng: number, locationName: string) => {
     try {
         const result = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -92,6 +65,9 @@ const App: React.FC = () => {
              // Remove markdown code blocks if present
             jsonString = jsonString.replace(/```json/g, '').replace(/```/g, '').trim();
             const data = JSON.parse(jsonString);
+            // Override location with fixedLocationName if present in weather data
+            data.today.location = locationName;
+            data.tomorrow.location = locationName;
             setWeatherData(data);
         }
     } catch (e) {
@@ -100,48 +76,29 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-      if (location) {
-          fetchWeather(location.lat, location.lng);
-      }
-  }, [location, fetchWeather]);
-
-
-  const fetchSchedule = useCallback(async (day: Day) => {
-    try {
-      // Switched to gemini-2.5-flash for better stability with JSON generation and to avoid 500 errors
-      const result = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: createSchedulePrompt(day),
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: scheduleSchema,
-        },
-      });
-      
-      const jsonString = result.text.trim();
-      const scheduleData = JSON.parse(jsonString);
-      
-      if (day === 'today') {
-        setTodaySchedule(scheduleData);
-      } else {
-        setTomorrowSchedule(scheduleData);
-      }
-    } catch (e: any) {
-        console.error(`Failed to fetch schedule for ${day}:`, e);
-        throw new Error(`Could not generate the schedule for ${day}. Please check your API key and network connection.`);
-    }
-  }, []);
+    // Fetch weather for the fixed default location
+    fetchWeather(fixedLocation.lat, fixedLocation.lng, fixedLocation.name);
+  }, [fetchWeather]);
 
   useEffect(() => {
     const initializeSchedules = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        await Promise.all([
-          fetchSchedule('today'),
-          fetchSchedule('tomorrow')
-        ]);
-         setChatHistory([{ role: 'model', text: "Here is your initial plan for today and tomorrow. I can answer questions about your day or help you make changes!" }]);
+        const today = new Date();
+        const tomorrow = new Date();
+        tomorrow.setDate(today.getDate() + 1);
+
+        // Saturday (0) to Thursday (4) are workdays based on 0-indexed Sunday start
+        // In the user's context (Sat-Thu workday), this translates to 0=Sat, 1=Sun, ..., 4=Wed
+        // Friday (5) is a day off
+        const isTodayWorkday = today.getDay() >= 0 && today.getDay() <= 4; // Sat (0) through Wed (4)
+        const isTomorrowWorkday = tomorrow.getDay() >= 0 && tomorrow.getDay() <= 4;
+
+        setTodaySchedule(isTodayWorkday ? defaultWorkdaySchedule : defaultFridaySchedule);
+        setTomorrowSchedule(isTomorrowWorkday ? defaultWorkdaySchedule : defaultFridaySchedule);
+        
+        setChatHistory([{ role: 'model', text: "Here is your initial plan for today and tomorrow. I can answer questions about your day or help you make changes!" }]);
       } catch (e: any) {
         setError(e.message);
       } finally {
@@ -149,7 +106,7 @@ const App: React.FC = () => {
       }
     };
     initializeSchedules();
-  }, [fetchSchedule]);
+  }, []); // Empty dependency array, schedules load once on mount
 
   const handleSendMessage = async (message: string) => {
     if (isStreaming) return;
@@ -268,17 +225,7 @@ const App: React.FC = () => {
             ) : (
               <>
                   <div className="h-full overflow-y-auto p-4 md:p-6 lg:p-8 max-w-3xl mx-auto pb-24">
-                      {geolocationUIMessage && showGeolocationMessage && (
-                          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300 rounded-lg flex items-start justify-between text-sm">
-                              <p>{geolocationUIMessage}</p>
-                              <button 
-                                  onClick={() => setShowGeolocationMessage(false)}
-                                  className="ml-4 p-1 rounded-full text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-200 hover:bg-yellow-100 dark:hover:bg-yellow-800 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                              >
-                                  <CloseIcon className="w-4 h-4" />
-                              </button>
-                          </div>
-                      )}
+                      {/* Removed geolocation UI message as geolocation is disabled */}
 
                       <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
                       <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
